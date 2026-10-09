@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF Headshot ESP</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: transparent; }
+        
+        /* The Box Style */
+        .esp-box {
+            position: absolute;
+            border: 2px solid #FF0000;
+            background-color: rgba(255, 0, 0, 0.2);
+            pointer-events: none; /* Let clicks pass through to the game */
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+
+        /* Auto Headshot Indicator */
+        .headshot-zone {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 40px; height: 40px;
+            border: 1px dashed yellow;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div class="headshot-zone"></div>
+
+    <script>
+        // Simulate receiving enemy coordinates from Native Layer
+        function updateESP(enemyData) {
+            const container = document.getElementById('game-container');
+            
+            // Clear old boxes
+            container.innerHTML = '';
+
+            enemyData.forEach(enemy => {
+                if (enemy.health > 0) {
+                    const box = document.createElement('div');
+                    box.className = 'esp-box';
+                    
+                    // Convert World Coords to Screen Coords
+                    const x = enemy.x * window.innerWidth / 2; 
+                    const y = enemy.y * window.innerHeight / 2;
+
+                    box.style.left = `${x}px`;
+                    box.style.top = `${y}px`;
+                    box.style.width = '60px';
+                    box.style.height = '120px'; // Headbox size
+                    
+                    container.appendChild(box);
+
+                    // Auto Headshot Logic
+                    if (isNearCenter(x, y)) {
+                        triggerAutoHeadshot();
+                    }
+                }
+            });
+        }
+
+        function isNearCenter(x, y) {
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            return Math.abs(x - centerX) < 30 && Math.abs(y - centerY) < 30;
+        }
+
+        function triggerAutoHeadshot() {
+            // Send touch event to native layer
+            window.NativeBridge.sendTap(window.innerWidth / 2, window.innerHeight / 2);
+        }
+    </script>
+</body>
+</html>
